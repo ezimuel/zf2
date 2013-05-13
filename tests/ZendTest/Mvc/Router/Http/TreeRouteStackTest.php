@@ -437,4 +437,47 @@ class TreeRouteStackTest extends TestCase
             array()
         );
     }
+
+    public function testZF4446()
+    {
+        $lang    = 'en-US';
+        $request = new Request();
+        $request->setUri("http://example.com/$lang/admin");
+        
+        $route = new TreeRouteStack();
+        $route->addRoutes(array(
+            'admin' => array(
+                'type' => 'Segment',
+                'options' => array(
+                    'route' => '/[:lang]/admin',
+                    'constraints' => array(
+                        'lang' => '[a-z]{2}(-[A-Z]{2}){0,1}'
+                    ),
+                    'defaults' => array(
+                        'controller' => 'Eaditor\Controller\Admin',
+                        'action' => 'index',
+                        'lang' => 'nl-NL'
+                    ),
+                ),
+                'may_terminate' => true,
+                'child_routes' => array(
+                    'eaditor' => array(
+                        'type' => 'Literal',
+                        'options' => array(
+                            'route' => '/editor',
+                            'defaults' => array(
+                                '__NAMESPACE__' => 'Eaditor\Controller',
+                                'controller' => 'Index',
+                                'action'     => 'index',
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        ));
+
+        $match   = $route->match($request);
+        $this->assertSame($lang, $match->getParam('lang'));
+
+    }
 }
